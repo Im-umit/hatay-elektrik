@@ -10,4 +10,4 @@ migrations_dir = "migrations"
 
 [[r2_buckets]]
 binding = "PHOTOS"
-bucket_name = "hatay-elektrikk"
+bucket_name = "hatay-elektrik"
