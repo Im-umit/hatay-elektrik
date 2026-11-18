@@ -1,4 +1,4 @@
-name = "hatay-elektrik1"
+name = "hatay-elektrik"
 pages_build_output_dir = "./public"
 compatibility_date = "2026-11-19"
 
@@ -10,4 +10,4 @@ migrations_dir = "migrations"
 
 [[r2_buckets]]
 binding = "PHOTOS"
-bucket_name = "hatay-elektrik"
+bucket_name = "hatay-elektrikp"
