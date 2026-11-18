@@ -5,7 +5,7 @@ compatibility_date = "2026-11-19"
 [[d1_databases]]
 binding = "DB"
 database_name = "hatay-elektrik-db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "509408ed-db02-4c6c-9a69-a8eaee95ede1"
 migrations_dir = "migrations"
 
 [[r2_buckets]]
