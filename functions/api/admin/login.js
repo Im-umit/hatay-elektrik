@@ -8,8 +8,16 @@ const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(d
 });
 
 export async function onRequestPost({ request, env }) {
-  if (!env.DB || !env.ADMIN_PASSWORD || !env.SESSION_SECRET || !env.RATE_LIMIT_SALT) {
-    return json({ error: 'Yönetim paneli yapılandırması tamamlanmadı.' }, 503);
+  const missingBindings = [];
+  if (!env.DB) missingBindings.push('DB');
+  if (!env.ADMIN_PASSWORD) missingBindings.push('ADMIN_PASSWORD');
+  if (!env.SESSION_SECRET) missingBindings.push('SESSION_SECRET');
+  if (!env.RATE_LIMIT_SALT) missingBindings.push('RATE_LIMIT_SALT');
+
+  if (missingBindings.length) {
+    return json({
+      error: `Yönetim paneli yapılandırması tamamlanmadı. Eksik: ${missingBindings.join(', ')}`
+    }, 503);
   }
 
   const origin = request.headers.get('Origin');
