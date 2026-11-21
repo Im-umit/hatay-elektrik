@@ -95,9 +95,15 @@
     const details = new FormData(form);
     const requestSummary = {
       name: String(details.get('name') || '').trim(),
+      phone: String(details.get('phone') || '').trim(),
+      province: 'Hatay',
       service: String(details.get('service') || '').trim(),
       district: String(details.get('district') || '').trim(),
-      neighborhood: String(details.get('neighborhood') || '').trim()
+      neighborhood: String(details.get('neighborhood') || '').trim(),
+      address: String(details.get('address') || '').trim(),
+      description: String(details.get('details') || '').trim(),
+      latitude: String(details.get('latitude') || '').trim(),
+      longitude: String(details.get('longitude') || '').trim()
     };
 
     if (submitButton) {
@@ -118,17 +124,33 @@
       if (!response.ok) throw new Error(data.error || 'Talep gönderilemedi. Lütfen telefonla veya WhatsApp üzerinden ulaşın.');
 
       const reference = String(data.reference || '').trim();
-      if (photoWhatsAppLink && reference) {
-        const message = [
-          'Merhaba Hatay Elektrik, web sitesi üzerinden servis talebi oluşturdum.',
-          `Talep numaram: ${reference}`,
-          `Ad Soyad: ${requestSummary.name}`,
-          `Hizmet: ${requestSummary.service}`,
-          `İlçe: ${requestSummary.district}`,
-          `Mahalle: ${requestSummary.neighborhood}`,
-          'Arıza fotoğrafını bu WhatsApp mesajına ekliyorum.'
-        ].join('\n');
-        photoWhatsAppLink.href = makeWhatsAppUrl(message);
+      if (!reference) {
+        throw new Error('Talep kaydedildi ancak talep numarası alınamadı. Lütfen işletmeyle telefonla iletişime geçin.');
+      }
+
+      const messageLines = [
+        'Merhaba Hatay Elektrik, web sitesi üzerinden servis talebi oluşturdum.',
+        `Talep numaram: ${reference}`,
+        `Ad Soyad: ${requestSummary.name}`,
+        `Telefon: ${requestSummary.phone}`,
+        `İl: ${requestSummary.province}`,
+        `İlçe: ${requestSummary.district}`,
+        `Mahalle: ${requestSummary.neighborhood}`,
+        `Açık adres: ${requestSummary.address}`,
+        `Hizmet: ${requestSummary.service}`,
+        `Arıza / talep açıklaması: ${requestSummary.description}`
+      ];
+
+      if (requestSummary.latitude && requestSummary.longitude) {
+        const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(`${requestSummary.latitude},${requestSummary.longitude}`)}`;
+        messageLines.push(`Konum: ${mapUrl}`);
+      }
+
+      messageLines.push('Arıza fotoğraflarını bu WhatsApp sohbetine ekliyorum.');
+      const whatsappUrl = makeWhatsAppUrl(messageLines.join('\n'));
+
+      if (photoWhatsAppLink) {
+        photoWhatsAppLink.href = whatsappUrl;
         photoWhatsAppLink.hidden = false;
       }
 
@@ -138,8 +160,14 @@
       if (longitude) longitude.value = '';
       if (mapLink) mapLink.hidden = true;
       if (locationStatus) locationStatus.textContent = 'İsteğe bağlı · Konum paylaşmak zorunda değilsiniz.';
-      showMessage(`Talebiniz başarıyla kaydedildi. Talep numaranız: ${reference}. Ekibimiz sizinle telefonla iletişime geçecektir. Fotoğraf göndermek isterseniz aşağıdaki WhatsApp düğmesini kullanın.`, 'success');
-      if (help) help.textContent = 'Talebiniz sisteme kaydedildi.';
+      showMessage(`Talebiniz başarıyla kaydedildi. Talep numaranız: ${reference}. WhatsApp açılıyor; hazır mesajı kontrol edip Gönder'e basabilirsiniz.`, 'success');
+      if (help) help.textContent = 'Talebiniz kaydedildi. WhatsApp açılıyor; mesajı ve bilgilerinizi kontrol edip Gönder düğmesine basın.';
+
+      // Aynı sekmede yönlendir: popup engelleyicilere takılmaz.
+      // Kayıt D1'e başarıyla yazıldıktan sonra çalışır; mesaj kullanıcı tarafından gönderilmelidir.
+      window.setTimeout(() => {
+        window.location.assign(whatsappUrl);
+      }, 650);
     } catch (error) {
       showMessage(error.message || 'Bir sorun oluştu. Telefonla veya WhatsApp üzerinden ulaşabilirsiniz.', 'error');
       if (help) help.textContent = 'Talep kaydedilemedi. Bilgilerinizi kontrol edip tekrar deneyin veya doğrudan arayın.';
