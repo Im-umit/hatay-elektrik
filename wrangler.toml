@@ -7,8 +7,3 @@ binding = "DB"
 database_name = "hatay-elektrik-db"
 database_id = "509408ed-db02-4c6c-9a69-a8eaee95ede1"
 migrations_dir = "migrations"
-
-[[r2_buckets]]
-binding = "PHOTOS"
-bucket_name = "hatay-elektrikp"
-#Bak Beni Sinirlendirmeyin

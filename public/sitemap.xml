@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://hatayelektrik.net/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://hatayelektrik.net/kvkk.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://hatayelektrik.net/privacy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://hatay-elektrik.pages.dev/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://hatay-elektrik.pages.dev/kvkk.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://hatay-elektrik.pages.dev/privacy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>
