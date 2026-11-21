@@ -4,3 +4,33 @@ export async function onRequestPatch(ctx){const auth=await authorized(ctx.reques
 async function authorized(request,env){if(!env.SESSION_SECRET)return false;const raw=(request.headers.get('Cookie')||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('he_admin='))?.slice(9);if(!raw)return false;const [payload,sig]=raw.split('.');if(!payload||!sig)return false;const expected=await sign(payload,env.SESSION_SECRET);if(!safeEqual(sig,expected))return false;try{const p=JSON.parse(atob(payload));return p.sub==='admin'&&p.exp>Date.now()}catch{return false}}
 async function sign(v,s){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(s),{name:'HMAC',hash:'SHA-256'},false,['sign']);const out=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(v));return btoa(String.fromCharCode(...new Uint8Array(out))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_')}
 function safeEqual(a,b){if(a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)d|=a.charCodeAt(i)^b.charCodeAt(i);return d===0}
+export async function onRequestDelete(ctx) {
+  const auth = await authorized(ctx.request, ctx.env);
+  if (!auth) return json({ error: 'Oturum gerekli.' }, 401);
+  if (!ctx.env.DB) return json({ error: 'Veritabanı bağlı değil.' }, 503);
+
+  const origin = ctx.request.headers.get('Origin');
+  if (origin && origin !== new URL(ctx.request.url).origin) {
+    return json({ error: 'Kaynak doğrulanamadı.' }, 403);
+  }
+
+  const reference = new URL(ctx.request.url).searchParams.get('reference') || '';
+  if (!/^HE-[A-Z0-9-]{5,50}$/.test(reference)) {
+    return json({ error: 'Geçersiz talep numarası.' }, 400);
+  }
+
+  try {
+    const result = await ctx.env.DB.prepare(
+      'DELETE FROM requests WHERE reference = ?'
+    ).bind(reference).run();
+
+    if (!result.meta || result.meta.changes !== 1) {
+      return json({ error: 'Talep bulunamadı veya zaten silinmiş.' }, 404);
+    }
+
+    return json({ ok: true, deleted: reference });
+  } catch (error) {
+    console.error('[Hatay Elektrik] Talep silinemedi:', error);
+    return json({ error: 'Talep silinemedi. Veritabanı hatasını kontrol edin.' }, 500);
+  }
+}

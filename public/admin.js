@@ -15,6 +15,25 @@
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[char]);
 
+  function buildWhatsAppUrl(item) {
+    const rawPhone = String(item.phone || '').replace(/\D/g, '');
+    let whatsappPhone = rawPhone;
+    if (rawPhone.startsWith('0')) whatsappPhone = `90${rawPhone.slice(1)}`;
+    else if (rawPhone.length === 10 && rawPhone.startsWith('5')) whatsappPhone = `90${rawPhone}`;
+
+    const message = [
+      'Merhaba, Hatay Elektrik servis talebiniz hakkında iletişime geçiyoruz.',
+      `Talep numarası: ${item.reference || ''}`,
+      `Ad Soyad: ${item.name || ''}`,
+      `Hizmet: ${item.service || ''}`,
+      `Adres: Hatay / ${item.district || ''} / ${item.neighborhood || ''} / ${item.address || ''}`,
+      `Açıklama: ${item.details || ''}`
+    ].join('\n');
+
+    if (!/^\d{10,15}$/.test(whatsappPhone)) return '#';
+    return `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`;
+  }
+
   async function api(url, options = {}) {
     const response = await fetch(url, {
       credentials: 'same-origin',
@@ -71,6 +90,10 @@
           </label>
           <span class="muted" data-status-message>Durumu değiştirince kaydedilir.</span>
         </div>
+        <div class="admin-actions">
+          <a class="admin-btn admin-whatsapp" href="${escapeHtml(buildWhatsAppUrl(item))}" target="_blank" rel="noopener noreferrer">WhatsApp'ta mesaj gönder</a>
+          <button class="admin-btn admin-danger" type="button" data-delete-ref="${escapeHtml(item.reference)}">Talebi sil</button>
+        </div>
       </article>
     `).join('');
 
@@ -94,6 +117,29 @@
         }
       });
     });
+
+    list.querySelectorAll('button[data-delete-ref]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const reference = button.dataset.deleteRef;
+        if (!window.confirm(`${reference} numaralı talep kalıcı olarak silinsin mi? Bu işlem geri alınamaz.`)) {
+          return;
+        }
+
+        button.disabled = true;
+        button.textContent = 'Siliniyor…';
+        try {
+          await api(`/api/admin/requests?reference=${encodeURIComponent(reference)}`, {
+            method: 'DELETE'
+          });
+          await load();
+        } catch (error) {
+          alert(error.message || 'Talep silinemedi.');
+          button.disabled = false;
+          button.textContent = 'Talebi sil';
+        }
+      });
+    });
+
   }
 
   $('#login-form')?.addEventListener('submit', async (event) => {
