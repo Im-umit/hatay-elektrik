@@ -26,6 +26,11 @@ export async function onRequestPost({ request, env }) {
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
     const ipHash = await hash(ip, env.RATE_LIMIT_SALT);
     const now = Date.now();
+    // 24 saatten eski başarısız giriş kayıtları hız sınırına katkı sağlamaz.
+    await env.DB.prepare(
+      'DELETE FROM admin_login_attempts WHERE created_at < ?'
+    ).bind(now - 24 * 60 * 60 * 1000).run();
+
     const attempts = await env.DB.prepare(
       'SELECT COUNT(*) AS n FROM admin_login_attempts WHERE ip_hash = ? AND created_at > ?'
     ).bind(ipHash, now - 15 * 60 * 1000).first();
